@@ -56,7 +56,7 @@ config.research.monitor = nil
 -- Config related to buildings (WIP)
 config.buildings = {}
 -- Enable buildings scan
-config.buildings.enable = false
+config.buildings.enable = true
 -- Monitor name to check first, If not found will find and use an unused monitor
 config.buildings.monitor = nil
 

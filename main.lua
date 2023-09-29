@@ -347,6 +347,119 @@ function Scan_researches()
 end
 
 function Scan_builds()
+    logging.log("Builds", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
+
+    local working_list = {}
+    local not_built_list = {}
+    local built_list = {}
+
+    local orders = colony.getWorkOrders()
+    local builds = colony.getBuildings()
+    for _, build in pairs(builds) do
+        build.name = build.name:gsub("^.*%.", "")
+        build.name = build.name:sub(1, 1):upper() .. build.name:sub(2):lower()
+
+        if not build.guarded then
+            build.name = build.name .. " (Unguarded)"
+        end
+
+        if build.isWorkingOn then
+            -- Will be read in orders
+        elseif build.built then
+            table.insert(built_list, build)
+        elseif build.maxLevel > 1 then
+            table.insert(not_built_list, build)
+        end
+    end
+
+    for _, build in pairs(orders) do
+        build.name = build.buildingName:gsub("^.*%.", ""):gsub("^.*[/\\]", "")
+        build.name = build.name:sub(1, 1):upper() .. build.name:sub(2):lower()
+        if build.type:match("Building$") then
+            if not build.isClaimed then
+                build.progress = "Not Claimed"
+            else
+                local needed = 0
+                local delive = 0
+                local availa = 0
+
+                local resources = colony.getWorkOrderResources(build.id)
+                for _, resource in pairs(resources) do
+                    needed = needed + resource.needed
+                    delive = delive + resource.delivering
+                    availa = availa + math.min(resource.available, resource.needed)
+                end
+                build.progress = string.format("%d%s/%d", availa, "(+" .. delive .. ")", needed)
+            end
+
+            table.insert(working_list, build)
+            print(build.id, build.isClaimed, build.priority, build.type)
+        end
+        
+    end
+
+    -- Time to monitorize!
+	monitors.buildings.reset()
+	local no_request = true
+
+	local header_shown = false
+    for _, build in pairs(working_list) do
+        if not header_shown then
+            monitors.buildings.print(monitors.buildings.row, "center", "Buildings (Ordered)")
+            monitors.buildings.row = monitors.buildings.row + 1
+            header_shown = true
+			no_request = false
+        end
+
+        local color = colors.yellow
+        if build.progress == "Not Claimed" then color = colors.red end
+
+        monitors.buildings.print(monitors.buildings.row, "left", string.format("[%d/%d] %s", build.targetLevel, 5, build.name) .. " ", color)
+        monitors.buildings.print(monitors.buildings.row, "right", " " .. build.progress, color)
+        monitors.buildings.row = monitors.buildings.row + 1
+    end
+
+    local header_shown = false
+    for _, build in pairs(not_built_list) do
+        if not header_shown then
+			if monitors.buildings.row > 3 then monitors.buildings.row = monitors.buildings.row + 1 end
+            monitors.buildings.print(monitors.buildings.row, "center", "Buildings (Not constructed)")
+            monitors.buildings.row = monitors.buildings.row + 1
+            header_shown = true
+			no_request = false
+        end
+		
+		local color = colors.orange
+        if not build.guarded then color = colors.red end
+		
+        monitors.buildings.print(monitors.buildings.row, "left", string.format("[%d/%d] %s", build.level, build.maxLevel, build.name) .. " ", color)
+        monitors.buildings.print(monitors.buildings.row, "right", string.format("At %d %d %d", build.location.x, build.location.y, build.location.z) .. " ", color)
+        monitors.buildings.row = monitors.buildings.row + 1
+    end
+	
+    local header_shown = false
+    for _, build in pairs(built_list) do
+        if not header_shown then
+			if monitors.buildings.row > 3 then monitors.buildings.row = monitors.buildings.row + 1 end
+            monitors.buildings.print(monitors.buildings.row, "center", "Buildings")
+            monitors.buildings.row = monitors.buildings.row + 1
+            header_shown = true
+			no_request = false
+        end
+		
+		local color = colors.lightBlue
+        if not build.guarded then color = colors.red end
+		
+        monitors.buildings.print(monitors.buildings.row, "left", string.format("[%d/%d] %s", build.level, build.maxLevel, build.name) .. " ", color)
+        monitors.buildings.row = monitors.buildings.row + 1
+    end
+	
+	if no_request then 
+		monitors.buildings.print(monitors.buildings.row, "center", "No buildings available") 
+		monitors.buildings.row = monitors.buildings.row + 1
+	end
+
+    logging.log("Builds", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 end
 
 ----------------------------------------------------------------------------

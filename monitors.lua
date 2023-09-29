@@ -46,7 +46,7 @@ if config.research.enable then
 end
 
 if config.buildings.enable then
-    monitors.buildings = wrap_monitor(config.build.monitor)
+    monitors.buildings = wrap_monitor(config.buildings.monitor)
     if monitors.buildings and (not monitors.work or monitors.buildings ~= monitors.work) and not (monitors.research or monitors.buildings ~= monitors.research) then
         logging.log("Monitors", "Monitor for buildings found from config")
     else
