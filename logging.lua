@@ -3,18 +3,27 @@ local logging = {}
 logging.filename = "logging.log"
 
 function logging.log(category, message, ...)
-    if #arg > 0 then
-        for s in arg do
-            message = message .. " " .. arg
-        end
+    for i, s in pairs(arg) do
+        if i ~= "n" then message = message .. " " .. s end
     end
-
-    print("[" .. category .. "] " .. message)
 
     local file = fs.open(logging.filename, 'a')
     file.writeLine(textutils.formatTime(os.time(), false) .. " - [" .. category .. "] " .. message)
     file.close()
+
+    print("[" .. category .. "] " .. message)
 end
 
+function logging.error(category, message, ...)
+    for i, s in pairs(arg) do
+        if i ~= "n" then message = message .. " " .. s end
+    end
+
+    local file = fs.open(logging.filename, 'a')
+    file.writeLine(textutils.formatTime(os.time(), false) .. " - [" .. category .. "] " .. message)
+    file.close()
+
+    error("[" .. category .. "] " .. message)
+end
 
 return logging

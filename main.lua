@@ -39,13 +39,13 @@ local ignore_exact_list = {
 -- Initialize everything!
 ----------------------------------------------------------------------------
 local rs = peripheral.find("rsBridge")
-if not rs then error("RS Bridge not found.") end
-print("RS Bridge initialized.")
+if not rs then logging.error("Setup", "RS Bridge not found.") end
+logging.log("Setup", "Refined storage initiated")
 
 local colony = peripheral.find("colonyIntegrator")
-if not colony then error("Colony Integrator not found.") end
-if not colony.isInColony then error("Colony Integrator is not in a colony.") end
-print("Colony Integrator initialized.")
+if not colony then logging.error("Setup", "Colony Integrator not found.") end
+if not colony.isInColony then logging.error("Setup", "Colony Integrator is not in a colony.") end
+logging.log("Setup", "Colony Integrator initiated")
 
 ----------------------------------------------------------------------------
 -- Functions, the essence!
@@ -57,7 +57,7 @@ function Scan()
 end
 
 function Scan_works()
-    print("\n[Work requests] Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
+    logging.log("Work requests", "Scan started at" .. textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
     local builder_list = {}
     local nonbuilder_list = {}
@@ -125,17 +125,17 @@ function Scan_works()
             if provided < needed then
                 if rs.isItemCrafting({name=item}) then
                     color = colors.yellow
-                    print("[Crafting]", item)
+                    logging.log("RS", "Following item is being crafted:", item)
                 elseif rs.craftItem({name=item, count=needed - provided}) then
 					color = colors.yellow
-					print("[Scheduled]", needed, "x", item)
+					logging.log("RS", "Following crafting has been requested:", needed - provided, "x", item)
 				else
 					color = colors.red
-					print("[Failed]", item)
+					logging.log("RS", "Failed to craft following item:", item)
 				end
             end
         else
-            print("[Skipped]", name, "[" .. target .. "]")
+            logging.log("RS", "Skipped", name, "for", target)
         end
 
         if string.find(desc, "of class") then
@@ -225,11 +225,11 @@ function Scan_works()
 		monitors.work.row = monitors.work.row + 1
 	end
 	
-	print("[Work requests] Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
+	logging.log("Work requests", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 end
 
 function Scan_researches()
-	print("\n[Researches] Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
+	logging.log("Researches", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
 	local not_started_list = {}
 	local in_progress_list = {}
@@ -343,7 +343,7 @@ function Scan_researches()
 		monitors.research.row = monitors.research.row + 1
 	end
 	
-	print("[Researches] Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
+	logging.log("Researches", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 end
 
 function Scan_builds()

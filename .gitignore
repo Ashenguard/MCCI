@@ -1,3 +1,7 @@
+.git
+.vs
+.idea
+
 /monitors.save
 /research.log
 /logging.log
