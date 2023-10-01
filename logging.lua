@@ -26,4 +26,11 @@ function logging.error(category, message, ...)
     error("[" .. category .. "] " .. message)
 end
 
+-- Clean the log file!
+function logging.reset()
+    local file = fs.open("logging.log", "w")
+    file.writeLine("Logging started at " .. textutils.formatTime(os.time(), false) .. " (" .. os.time() .. ").")
+    file.close()
+end
+
 return logging

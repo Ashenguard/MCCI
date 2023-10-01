@@ -1,19 +1,5 @@
--- RSConfig.lua
--- Author: Ashenguard
--- Original author: Scott Adkins <adkinss@gmail.com> (Zucanthor)
--- Published: September 2023
--- Minecraft Version: 1.20.X
-
--- Need help, Find me on discord and servers below (Probably should ping me there!) :)
--- ID: 00ashenguard
--- 
--- Minecolonies discord: https://discord.gg/minecolonies-139070364159311872
--- Computercraft discord: https://discord.gg/minecraft-computer-mods-477910221872824320
--- Advanced peripheral discord: https://discord.gg/Jf7n7s5TCk
--- My own server: https://discord.gg/vgka549UJW
-
--- Read "Readme.md" for more info and tutorial
-
+-- Read the "readme.md" first!
+-- https://github.com/Ashenguard/MCCI
 
 -- This is a config file you can use to customize the RSWarehouse
 local config = {}
