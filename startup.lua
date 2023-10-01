@@ -394,11 +394,14 @@ function Scan_builds()
                 end
                 build.progress = string.format("%d%s/%d", availa, "(+" .. delive .. ")", needed)
             end
+            if build.name:match("Tavern") then
+                build.maxLevel = 3
+            else
+                build.maxLevel = 5
+            end
 
             table.insert(working_list, build)
-            print(build.id, build.isClaimed, build.priority, build.type)
         end
-        
     end
 
     -- Time to monitorize!
@@ -417,7 +420,7 @@ function Scan_builds()
         local color = colors.yellow
         if build.progress == "Not Claimed" then color = colors.red end
 
-        monitors.buildings.print(monitors.buildings.row, "left", string.format("[%d/%d] %s", build.targetLevel, 5, build.name) .. " ", color)
+        monitors.buildings.print(monitors.buildings.row, "left", string.format("[%d/%d] %s", build.targetLevel, build.maxLevel, build.name) .. " ", color)
         monitors.buildings.print(monitors.buildings.row, "right", " " .. build.progress, color)
         monitors.buildings.row = monitors.buildings.row + 1
     end
