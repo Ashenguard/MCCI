@@ -8,10 +8,22 @@ function logging.log(category, message, ...)
     end
 
     local file = fs.open(logging.filename, 'a')
-    file.writeLine(textutils.formatTime(os.time(), false) .. " - [" .. category .. "] " .. message)
+    file.writeLine(textutils.formatTime(os.time(), false) .. " - [" .. category .. "] INFO - " .. message)
     file.close()
 
-    print("[" .. category .. "] " .. message)
+    print("[" .. category .. "] INFO - " .. message)
+end
+
+function logging.warn(category, message, ...)
+    for i, s in pairs(arg) do
+        if i ~= "n" then message = message .. " " .. s end
+    end
+
+    local file = fs.open(logging.filename, 'a')
+    file.writeLine(textutils.formatTime(os.time(), false) .. " - [" .. category .. "] WARN - " .. message)
+    file.close()
+
+    print("[" .. category .. "] WARN - " .. message)
 end
 
 function logging.error(category, message, ...)

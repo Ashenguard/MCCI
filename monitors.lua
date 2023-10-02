@@ -1,150 +1,167 @@
-local config = require("config")
 local logging = require("logging")
+local scanner = require("scanner")
+local timer   = nil                 -- Avoiding require loop by initializing it in runtime
+
 local monitors = {}
 
-local connected_monitors = {peripheral.find("monitor")}
-print(#connected_monitors, "monitors found!")
-
-local savefile = fs.open("monitors.save", "r")
-local saved_monitors = {}
-if savefile then
-    saved_monitors.work = savefile.readLine()
-    saved_monitors.research = savefile.readLine()
-    saved_monitors.build = savefile.readLine()
-    savefile.close()
+local tabs = {"Requests", "Buildings", "Citizens", "Researches", "Refined Storage", "Settings"}
+local tabs_nick = {"works", "builds", "people", "researches", "rs", "settings"}
+local tabs_width = 0
+for _, tab in ipairs(tabs) do
+    tabs_width = math.max(tabs_width, #tab)
 end
 
-local function wrap_monitor(name)
-    if not name then return nil end
-    return peripheral.wrap(name)
+local function tab_name(i)
+    local name = tabs[i]
+    return "<= " .. string.rep(" ", math.floor((tabs_width - #name) / 2)) .. name .. string.rep(" ", math.ceil((tabs_width - #name) / 2)) .. " =>"
 end
 
-if config.work.enable then
-    monitors.work = wrap_monitor(config.work.monitor)
-    if monitors.work then
-        logging.log("Monitors", "Monitor for work requests found from config")
-    else
-        monitors.work = wrap_monitor(saved_monitors.work)
-        if monitors.work then
-            logging.log("Monitors", "Monitor for work requests found from saved file")
+local function touched(x0, x1, range)
+    for i = x1, x1 + range do
+        if x0 == i then
+            return true
         end
     end
+    return false
 end
 
-if config.research.enable then
-    monitors.research = wrap_monitor(config.research.monitor)
-    if monitors.research and (not monitors.work or monitors.research ~= monitors.work) then
-        logging.log("Monitors", "Monitor for researches found from config")
-    else
-        monitors.research = wrap_monitor(saved_monitors.research)
-        if monitors.research and (not monitors.work or monitors.research ~= monitors.work) then
-            logging.log("Monitors", "Monitor for researches found from saved file")
-        else
-            monitors.research = nil
-        end
-    end
-end
+monitors.all = {peripheral.find("monitor")}
+logging.log("Monitors", #monitors.all, "monitors found!")
 
-if config.buildings.enable then
-    monitors.buildings = wrap_monitor(config.buildings.monitor)
-    if monitors.buildings and (not monitors.work or monitors.buildings ~= monitors.work) and not (monitors.research or monitors.buildings ~= monitors.research) then
-        logging.log("Monitors", "Monitor for buildings found from config")
-    else
-        monitors.buildings = wrap_monitor(saved_monitors.buildings)
-        if monitors.buildings and (not monitors.work or monitors.buildings ~= monitors.work) and not (monitors.research or monitors.buildings ~= monitors.research) then
-            logging.log("Monitors", "Monitor for buildings found from saved file")
-        else
-            monitors.buildings = nil
-        end
-    end
-end
+monitors.wrap = {}
+for i, monitor in ipairs(monitors.all) do
+    local w, h = monitor.getSize()
 
--- Try find and claim a monitor for missing ones
-if config.work.enable and not monitors.work then
-    for _, monitor in pairs(connected_monitors) do
-        if monitor and monitor ~= monitors.research and monitor ~= monitors.buildings then
-            monitors.work = monitor
-            logging.log("Monitors", "Monitor for work requests has been claimed from available monitors")
-            break
-        end
-    end
-    if not monitors.work then
-        config.work.enable = false
-        logging.log("Monitors", "Unable to find monitor for work requests, disabling...")
-    end
-end
-if config.research.enable and not monitors.research then
-    for _, monitor in pairs(connected_monitors) do
-        if monitor and monitor ~= monitors.work and monitor ~= monitors.buildings then
-            monitors.research = monitor
-            logging.log("Monitors", "Monitor for researches has been claimed from available monitors")
-            break
-        end
-    end
-    if not monitors.research then
-        config.research.enable = false
-        logging.log("Monitors", "Unable to find monitor for researches, disabling...")
-    end
-end
-if config.buildings.enable and not monitors.buildings then
-    for _, monitor in pairs(connected_monitors) do
-        if monitor and monitor ~= monitors.research and monitor ~= monitors.work then
-            monitors.buildings = monitor
-            logging.log("Monitors", "Monitor for buildings has been claimed from available monitors")
-            break
-        end
-    end
-    if not monitors.buildings then
-        config.buildings.enable = false
-        logging.log("Monitors", "Unable to find monitor for buildings, disabling...")
-    end
-end
-
--- Saving what you got...
-local savefile = fs.open("monitors.save", "w")
-if monitors.work      then savefile.writeLine(peripheral.getName(monitors.work))      else savefile.writeLine("") end
-if monitors.research  then savefile.writeLine(peripheral.getName(monitors.research))  else savefile.writeLine("") end
-if monitors.buildings then savefile.writeLine(peripheral.getName(monitors.buildings)) else savefile.writeLine("") end
-savefile.close()
-
--- Functions you may now come in!
-local function initialize(monitor)
-    if not monitor then return end
-
+    monitor.clear()
     monitor.setTextScale(0.5)
-    monitor.setCursorPos(1, 1)
     monitor.setCursorBlink(false)
-
-    monitor.row = 4
-
-    function monitor.print(row, align, text, ...)
-        local w, h = monitor.getSize()
-        local fg = monitor.getTextColor()
-        local bg = monitor.getBackgroundColor()
-        
-        local pos = 1
-        if align == "left"   then pos = 1 end
-        if align == "center" then pos = math.floor((w - #text) / 2) end
-        if align == "right"  then pos = w - #text end
     
-        if #arg > 0 then monitor.setTextColor(arg[1]) end
-        if #arg > 1 then monitor.setBackgroundColor(arg[2]) end
+    monitor.row  = 1
+    monitor.tab  = (i - 1) % #tabs + 1
+    monitor.prev = math.floor((w - tabs_width - 6) / 2)
+    monitor.next = monitor.prev + tabs_width + 3
+    monitor.data = {}
+
+    monitors.wrap[peripheral.getName(monitor)] = monitor
+
+    function monitor.print(row, pos, text, fg, bg, fill)
+        if text == nil or pos == nil then
+            return
+        end
+
+        local pw, _ = monitor.getSize()
+        local dfg = monitor.getTextColor()
+        local dbg = monitor.getBackgroundColor()
+        
+        if fill then fill = 0 else fill = 2 end
+        if pos == "left"   then pos = 1 end
+        if pos == "center" then pos = math.floor((pw - #text - fill) / 2) end
+        if pos == "right"  then pos = pw - #text - fill end
+    
+        if fg ~= nil then monitor.setTextColor(fg) end
+        if bg ~= nil then monitor.setBackgroundColor(bg) end
 
         monitor.setCursorPos(pos, row)
         monitor.write(text)
-
-        monitor.setTextColor(fg)
-        monitor.setBackgroundColor(bg)
+        monitor.setTextColor(dfg)
+        monitor.setBackgroundColor(dbg)
     end
 
-    function monitor.reset()
-        monitor.row = 3
+    function monitor.print_data()
         monitor.clear()
+    
+        local pw, ph = monitor.getSize()
+        monitor.print(2, "center", tab_name(monitor.tab))
+
+        if monitor.data == nil then
+            monitor.print(4, "center", "No data found!", colors.white, colors.red)
+            return
+        end
+
+        for ui = 1, h - 3 do
+            local line = monitor.data[ui]
+            
+            monitor.setCursorPos(1, ui + 3)
+            monitor.clearLine()
+
+            if line ~= nil then
+                for _, state in ipairs(line) do
+                    monitor.print(ui + 3, state.x, state.t, state.fg, state.bg)
+                end
+            end
+        end
+
+        if monitor.row > 1 then monitor.print(4, pw - 2, "^", nil, nil, true) end
+        if #monitor.data > ph - 3 then monitor.print(ph, pw - 2, "v", nil, nil, true) end
+    end
+
+    function monitor.update()
+        local uw, _ = monitor.getSize()
+
+        monitor.row  = 1
+        monitor.data = scanner.data[tabs_nick[monitor.tab]]
+        monitor.prev = math.floor((uw - tabs_width - 6) / 2)
+        monitor.next = monitor.prev + tabs_width + 3
+
+        monitor.print_data()
+        if timer == nil then timer = require("timer") end
+        timer.display(monitor)
+    end
+
+    function monitor.call_touch(x, y)
+        if y == 2 then
+            if touched(x, monitor.prev, 3) then
+                monitor.tab = monitor.tab - 1
+                if monitor.tab < 1 then monitor.tab = #tabs end
+                monitor.update()
+                return true
+            end
+            if touched(x, monitor.next, 3) then
+                monitor.tab = monitor.tab + 1
+                if monitor.tab > #tabs then monitor.tab = 1 end
+                monitor.update()
+                return true
+            end
+        end
+        local tw, th = monitor.getSize()
+        if y == 4 and touched(x, tw - 2, 3) then
+            monitor.scroll(-1)
+            return true
+        end
+        if y == th and touched(x, tw - 2, 3) then
+            monitor.scroll(1)
+            return true
+        end
+    end
+
+    function monitor.scroll(size)
+        local _, sh = monitor.getSize()
+        monitor.row = math.max(1, monitor.row + size)
+        if #monitor.data - monitor.row < sh - 4 then
+            monitor.row = #monitor.data - sh + 4
+        end
+
+        monitor.print_data()
     end
 end
 
-initialize(monitors.work)
-initialize(monitors.research)
-initialize(monitors.buildings)
+function monitors.update_all()
+    logging.log("Monitors", "Updating all monitors")
+
+    for _, monitor in pairs(monitors.all) do
+        monitor.update()
+    end
+end
+
+function monitors.run()
+    while true do
+        local _, m, x, y = os.pullEvent("monitor_touch")
+        local monitor = monitors.wrap[m]
+
+        if monitor then
+            monitor.call_touch(x, y)
+        end
+    end
+end
 
 return monitors
