@@ -1,9 +1,13 @@
 local config  = require("config")
 local logging = require("logging")
+local utils   = require("utils")
 
 local rs = {
-    enabled = true
+    enabled = true,
+    data = {}
 }
+
+local color_map = {colors.red, colors.orange, colors.yellow, colors.green}
 
 -- Might messup these so better to skip them (Add if you found more)
 local ignore_match_list = {
@@ -38,10 +42,30 @@ local ignore_exact_list = {
 local bridge = peripheral.find("rsBridge")
 if not bridge then
     rs.enabled = false
+    table.insert(rs.data, {
+        {x="center", t="Unable to connect to refined storage", fg=colors.white, bg=colors.red}
+    })
     logging.warn("Setup", "RS Bridge not found.")
 else
     rs.bridge = bridge
     logging.log("Setup", "Refined storage initiated")
+end
+
+local function sort_items(method)
+    if method == "name" then
+        return function (a, b)
+            return a.name < b.name
+        end
+    end
+    if method == "name dec" then
+        return function (a, b)
+            return a.name > b.name
+        end
+    end
+
+    return function (a, b)
+        return a.amount > b.amount
+    end
 end
 
 function rs.handle_request(request)
@@ -87,6 +111,59 @@ function rs.handle_request(request)
         logging.log("RS", "Skipped", request.name)
         return "SKIPPED"
     end
+end
+
+function rs.scan()
+    if not rs.enabled then
+        return
+    end
+
+    logging.log("RS", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
+
+    local energy = "Energy: " .. bridge.getEnergyStorage() .. "/" .. bridge.getMaxEnergyStorage() .. "( " .. bridge.getEnergyUsage() .. "Fe/t)"
+    local energy_color = color_map[math.floor(bridge.getEnergyStorage() * 3 / bridge.getMaxEnergyStorage() + 0.05) + 1]
+
+    rs.data = {
+        {
+            {x="left", t=energy, fg=energy_color},
+            {x="right", t="[           ", fg=energy_color},
+            {x="right", t=string.rep(" ", math.floor(bridge.getEnergyStorage() * 10 / bridge.getMaxEnergyStorage() + 0.5)) .. " ", bg=energy_color},
+            {x="right", t="]", fg=energy_color}
+        },
+        {}
+    }
+
+    local items = {}
+    for _, item in ipairs(bridge.listItems()) do
+        item = bridge.getItem(item)
+        if bridge.isItemCrafting(item) then
+            item.tag = "P"
+            item.color = colors.lightBlue
+        elseif bridge.isItemCraftable(item) then
+            item.tag = "C"
+            item.color = colors.combine(colors.lightBlue, colors.blue)
+        else
+            item.tag = " "
+            item.color = colors.pink
+        end
+
+        item.mod = item.name:sub(1, item.name:find(":") - 1)
+        item.mod = item.mod:sub(1, 1):upper() .. item.mod:sub(2):lower()
+        item.name = item.name:sub(item.name:find(":") + 1)
+        item.name = item.name:sub(1, 1):upper() .. item.name:sub(2):lower()
+
+        table.insert(items, item)
+    end
+    table.sort(items, sort_items())
+
+    for _, item in pairs(items) do
+        table.insert(rs.data, {
+            {x="left" , t=string.format("[%s] %s", item.tag, item.displayName), fg=item.color},
+            {x="right", t=string.format("%s %-4s", item.mod, utils.format_number(item.amount)), fg=colors.lightGray}
+        })
+    end
+
+    logging.log("RS", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 end
 
 return rs
