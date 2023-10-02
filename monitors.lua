@@ -79,7 +79,7 @@ for i, monitor in ipairs(monitors.all) do
         end
 
         for ui = 1, h - 3 do
-            local line = monitor.data[ui]
+            local line = monitor.data[ui + monitor.row - 1]
             
             monitor.setCursorPos(1, ui + 3)
             monitor.clearLine()

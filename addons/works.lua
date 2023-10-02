@@ -30,7 +30,6 @@ function works.scan()
         local target = request.target
         local desc = request.desc
         local needed = request.count
-        local provided = 0
 		
 		-- Remove middle name (Made by Adkins, Not tweaked yet...)
         local target_words = {}
@@ -54,7 +53,7 @@ function works.scan()
         until target_count > target_length - 3
 		
         -- Handle request by rs or me
-		local rs_result = rs.handle_request(request)
+		local rs_result, provided, crafted = rs.handle_request(request)
         
         local color = color_map[rs_result]
 

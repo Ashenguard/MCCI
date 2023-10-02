@@ -70,7 +70,7 @@ end
 
 function rs.handle_request(request)
     if bridge == nil then
-        return "DISABLED"
+        return "DISABLED", 0, 0
     end
 
     local use_rs = true
@@ -87,29 +87,31 @@ function rs.handle_request(request)
         local item_name = request.items[1].name
         
         -- NBTs might fail...
-        if not request.items[1].nbt then
+        if request.items[1].nbt == nil or next(request.items[1].nbt) == nil then
             local stored = bridge.getItem({name=item_name}).amount
             provided = math.min(stored, request.count)
-            bridge.exportItemToPeripheral({name=item_name, count=provided}, config.export_to)
+            if provided > 0 then
+                bridge.exportItemToPeripheral({name=item_name, count=provided}, config.export_to)
+            end
         end
         
         if provided < request.count then
             if bridge.isItemCrafting({name=request.items[1].name}) then
                 logging.log("RS", "Following item is being crafted:", item_name)
-                return "CRAFTING"
+                return "CRAFTING", provided, 0
             elseif bridge.craftItem({name=item_name, count=request.count - provided}) then
                 logging.log("RS", "Following crafting has been requested:", request.count - provided, "x", item_name)
-                return "SCHEDULED"
+                return "SCHEDULED", provided, request.count - provided
             else
-                logging.log("RS", "Failed to craft following item:", item_name)
-                return "FAILED"
+                logging.log("RS", "Failed to provide or craft following item:", item_name)
+                return "FAILED", provided, 0
             end
         else
-            return "DONE"
+            return "DONE", provided, 0
         end
     else
         logging.log("RS", "Skipped", request.name)
-        return "SKIPPED"
+        return "SKIPPED", 0, 0
     end
 end
 
