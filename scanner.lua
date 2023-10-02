@@ -2,6 +2,7 @@ local config = require("config")
 
 local works      = require("addons.works")
 local builds     = require("addons.builds")
+local citizens   = require("addons.citizens")
 local researches = require("addons.researches")
 
 local scanner = {
@@ -21,6 +22,9 @@ function scanner.run()
 
             researches.scan()
             scanner.data.researches = researches.data
+
+            citizens.scan()
+            scanner.data.citizens = citizens.data
 
             TIMER = os.startTimer(config.internal)
         end

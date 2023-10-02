@@ -16,7 +16,8 @@ function timer.display(monitor)
 end
 
 function timer.run()
-    local ticks = 1
+    -- Give time for data to update
+    local ticks = 3
     local TIMER = os.startTimer(1)
     while true do
         local _, t = os.pullEvent("timer")

@@ -5,7 +5,7 @@ local timer   = nil                 -- Avoiding require loop by initializing it 
 local monitors = {}
 
 local tabs = {"Requests", "Buildings", "Citizens", "Researches", "Refined Storage", "Settings"}
-local tabs_nick = {"works", "builds", "people", "researches", "rs", "settings"}
+local tabs_nick = {"works", "builds", "citizens", "researches", "rs", "settings"}
 local tabs_width = 0
 for _, tab in ipairs(tabs) do
     tabs_width = math.max(tabs_width, #tab)
