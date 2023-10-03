@@ -183,11 +183,19 @@ for i, monitor in ipairs(monitors.all) do
     end
 end
 
-function monitors.update_all()
+function monitors.update_all(tab)
     logging.log("Monitors", "Updating all monitors")
 
-    for _, monitor in pairs(monitors.all) do
-        monitor.update()
+    if tab == nil or tab == "all" then
+        for _, monitor in pairs(monitors.all) do
+            monitor.update()
+        end
+    else
+        for _, monitor in pairs(monitors.all) do
+            if tabs_nick[monitor.tab] == tab then
+                monitor.update()
+            end
+        end
     end
 end
 
