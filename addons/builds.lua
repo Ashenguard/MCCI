@@ -2,9 +2,7 @@ local logging = require("logging")
 
 local colony  = require("addons.colony")
 
-local builds = {
-    data = {}
-}
+local builds = {}
 
 local function sort_builds(a, b)
     if a.level == b.level then
@@ -14,7 +12,12 @@ local function sort_builds(a, b)
     return a.level < b.level
 end
 
-function builds.scan()
+function builds.scan(data, force)
+    local now = os.time()
+    if not force and (now < 5 or now > 19.5) then
+        return
+    end
+    
     logging.log("Builds", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
     local working_list = {}
@@ -93,13 +96,13 @@ function builds.scan()
     logging.log("Builds", "Found", built_count, "other buildings")
 
     -- Time to save data!
-    builds.data = {}
+    for k in pairs(data) do data[k] = nil end
 	local no_request = true
 
     local header_1 = false
     for _, build in pairs(working_list) do
         if not header_1 then
-            table.insert(builds.data, {
+            table.insert(data, {
                 {x="center", t="Ordered Buildings"},
                 {x="right", t="Resources"}
             })
@@ -109,73 +112,73 @@ function builds.scan()
         local color = colors.yellow
         if build.progress == "Not Claimed" then color = colors.red end
 
-        table.insert(builds.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%d/%d] %s", build.targetLevel, build.maxLevel, build.name), fg=color},
             {x="right", t=build.progress                                                            , fg=color}
         })
     end
     if header_1 then
-        table.insert(builds.data, {})
+        table.insert(data, {})
     end
 
     local header_2 = false
     for _, build in pairs(not_built_list) do
         if not header_2 then
-            table.insert(builds.data, {
+            table.insert(data, {
                 {x="center", t="Abondoned Buildings"}
             })
             header_2 = true
 			no_request = false
         end
 
-        table.insert(builds.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%d/%d] %s", build.level, build.maxLevel, build.name)              , fg=colors.orange},
             {x="right", t=string.format("At %d %d %d", build.location.x, build.location.y, build.location.z), fg=colors.orange}
         })
     end
     if header_2 then
-        table.insert(builds.data, {})
+        table.insert(data, {})
     end
 
     local header_3 = false
     for _, build in pairs(unguarded_list) do
         if not header_3 then
-            table.insert(builds.data, {
+            table.insert(data, {
                 {x="center", t="Unguarded Buildings"}
             })
             header_3 = true
 			no_request = false
         end
 
-        table.insert(builds.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%d/%d] %s", build.level, build.maxLevel, build.name)              , fg=colors.red},
             {x="right", t=string.format("At %d %d %d", build.location.x, build.location.y, build.location.z), fg=colors.red}
         })
     end
     if header_3 then
-        table.insert(builds.data, {})
+        table.insert(data, {})
     end
 
     local header_4 = false
     for _, build in pairs(built_list_sorted) do
         if not header_4 then
-            table.insert(builds.data, {
+            table.insert(data, {
                 {x="center", t="Other Buildings"}
             })
             header_4 = true
 			no_request = false
         end
 
-        table.insert(builds.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%d/%d] %dx %s", build.level, build.maxLevel, build.count, build.name), fg=colors.lightBlue}
         })
     end
     if header_4 then
-        table.insert(builds.data, {})
+        table.insert(data, {})
     end
 	
 	if no_request then 
-        table.insert(builds.data, {x="center", t="No buildings... How?", fg=colors.white, bg=colors.red})
+        table.insert(data, {x="center", t="No buildings... How?", fg=colors.white, bg=colors.red})
 	end
 
     logging.log("Builds", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")

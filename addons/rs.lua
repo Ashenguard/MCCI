@@ -3,8 +3,7 @@ local logging = require("logging")
 local utils   = require("utils")
 
 local rs = {
-    enabled = true,
-    data = {}
+    enabled = true
 }
 
 local color_map = {colors.red, colors.orange, colors.yellow, colors.green}
@@ -42,9 +41,6 @@ local ignore_exact_list = {
 local bridge = peripheral.find("rsBridge")
 if not bridge then
     rs.enabled = false
-    table.insert(rs.data, {
-        {x="center", t="Unable to connect to refined storage", fg=colors.white, bg=colors.red}
-    })
     logging.warn("Setup", "RS Bridge not found.")
 else
     rs.bridge = bridge
@@ -120,8 +116,12 @@ function rs.handle_request(request)
     end
 end
 
-function rs.scan()
+function rs.scan(data, force)
     if not rs.enabled then
+        for k in pairs(data) do data[k] = nil end
+        table.insert(data, {
+            {x="center", t="RS Bridge was not found", fg=colors.white, bg=colors.red},
+        })
         return
     end
 
@@ -130,15 +130,13 @@ function rs.scan()
     local energy = "Energy: " .. bridge.getEnergyStorage() .. "/" .. bridge.getMaxEnergyStorage() .. "( " .. bridge.getEnergyUsage() .. "Fe/t)"
     local energy_color = color_map[math.floor(bridge.getEnergyStorage() * 3 / bridge.getMaxEnergyStorage() + 0.05) + 1]
 
-    rs.data = {
-        {
-            {x="left", t=energy, fg=energy_color},
-            {x="right", t="[           ", fg=energy_color},
-            {x="right", t=string.rep(" ", math.floor(bridge.getEnergyStorage() * 10 / bridge.getMaxEnergyStorage() + 0.5)) .. " ", bg=energy_color},
-            {x="right", t="]", fg=energy_color}
-        },
-        {}
-    }
+    for k in pairs(data) do data[k] = nil end
+    table.insert(data, {
+        {x="left", t=energy, fg=energy_color},
+        {x="right", t="[           ", fg=energy_color},
+        {x="right", t=string.rep(" ", math.floor(bridge.getEnergyStorage() * 10 / bridge.getMaxEnergyStorage() + 0.5)) .. " ", bg=energy_color},
+        {x="right", t="]", fg=energy_color}
+    })
 
     local items = {}
     for _, item in ipairs(bridge.listItems()) do
@@ -164,9 +162,9 @@ function rs.scan()
     table.sort(items, sort_items())
 
     for _, item in pairs(items) do
-        table.insert(rs.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%s] %s", item.tag, item.displayName), fg=item.color},
-            {x="right", t=string.format("%s %-4s", item.mod, utils.format_number(item.amount)), fg=colors.lightGray}
+            {x="right", t=string.format("%s %6s", item.mod, utils.format_number(item.amount)), fg=colors.lightGray}
         })
     end
 

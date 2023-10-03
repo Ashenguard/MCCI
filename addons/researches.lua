@@ -7,7 +7,12 @@ local researches = {
     data = {}
 }
 
-function researches.scan()
+function researches.scan(data, force)
+    local now = os.time()
+    if not force and (now < 5 or now > 19.5) then
+        return
+    end
+    
 	logging.log("Researches", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
 	local not_started_list = {}
@@ -52,13 +57,13 @@ function researches.scan()
 	end
 	
     -- Time to save data!
-	researches.data = {}
+	for k in pairs(data) do data[k] = nil end
 	local no_request = true
 
     local header_1 = false
     for _, research in pairs(in_progress_list) do
         if not header_1 then
-            table.insert(researches.data, {
+            table.insert(data, {
                 {x="center", t="Researches (In progress)"}
             })
             header_1 = true
@@ -71,75 +76,75 @@ function researches.scan()
 
 		local bar = string.rep("#", math.floor(research.progress / 10)) .. string.rep(" ", 10 - math.floor(research.progress / 10))
 
-        table.insert(researches.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%s] %s", research.category, research.name), fg=color},
             {x="right", t=string.format("[%s]%3d%%", bar, research.progress)        , fg=color}
         })
     end
     if header_1 then
-        table.insert(researches.data, {})
+        table.insert(data, {})
     end
 
     local header_2 = false
     for _, research in pairs(not_started_list) do
         if not header_2 then
-            table.insert(researches.data, {
+            table.insert(data, {
                 {x="center", t="Researches (Can be researched)"}
             })
             header_2 = true
 			no_request = false
         end
 
-        table.insert(researches.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%s - %3.1fh] %s", research.category, research.time, research.name), fg=colors.lightBlue}
         })
 
         if config.research.description then
 			for _, effect in pairs(research.researchEffects) do
-                table.insert(researches.data, {
+                table.insert(data, {
                     {x="left" , t="  - " .. effect, fg=colors.lightGray}
                 })
 			end
 		end
     end
     if header_2 then
-        table.insert(researches.data, {})
+        table.insert(data, {})
     end
 
     local header_3
     for _, research in pairs(not_fulfilled_list) do
         if not header_3 then
-            table.insert(researches.data, {
+            table.insert(data, {
                 {x="center", t="Researches (Not unlocked)"}
             })
             header_3 = true
 			no_request = false
         end
 
-        table.insert(researches.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%s - %3.1fh] %s", research.category, research.time, research.name), fg=colors.red}
         })
 
         for _, requirement in ipairs(research.requirements) do
-            table.insert(researches.data, {
+            table.insert(data, {
                 {x="left" , t=" [" .. (requirement.fulfilled and "X" or " ") .. "] " .. requirement.desc, fg=requirement.fulfilled and colors.green or colors.pink}
             })
         end
 
         if config.research.description then
 			for _, effect in pairs(research.researchEffects) do
-                table.insert(researches.data, {
+                table.insert(data, {
                     {x="left" , t="  - " .. effect, fg=colors.pink}
                 })
 			end
 		end
     end
     if header_3 then
-        table.insert(researches.data, {})
+        table.insert(data, {})
     end
 	
 	if no_request then
-        table.insert(researches.data, {x="center", t="No open requests", fg=colors.white, bg=colors.green})
+        table.insert(data, {x="center", t="No open requests", fg=colors.white, bg=colors.green})
 	end
 	
 	logging.log("Researches", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")

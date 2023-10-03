@@ -6,4 +6,4 @@ local scanner  = require("scanner")
 
 
 logging.reset()
-parallel.waitForAll(timer.run, monitors.run, scanner.run)
+parallel.waitForAll(timer.run, monitors.run)

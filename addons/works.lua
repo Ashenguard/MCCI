@@ -17,7 +17,12 @@ local color_map = {
     DONE      = colors.green
 }
 
-function works.scan()
+function works.scan(data, force)
+    local now = os.time()
+    if not force and (now < 5 or now > 19.5) then
+        return
+    end
+    
     logging.log("Work requests", "Scan started at" .. textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
     local builder_list = {}
@@ -88,49 +93,49 @@ function works.scan()
     end
 
     -- Time to save data!
-    works.data = {}
+    for k in pairs(data) do data[k] = nil end
 	local no_request = true
 
     local header_1 = false
     for _, equipment in pairs(equipment_list) do
         if not header_1 then
-            table.insert(works.data, {
+            table.insert(data, {
                 {x="center", t="Equipments"}
             })
             header_1 = true
 			no_request = false
         end
-        table.insert(works.data, {
+        table.insert(data, {
             {x="left" , t=string.format("%d %s", equipment.needed, equipment.name), fg=equipment.color},
             {x="right", t=equipment.target                                        , fg=equipment.color}
         })
     end
     if header_1 then
-        table.insert(works.data, {})
+        table.insert(data, {})
     end
 
     local header_2 = false
     for _, builder in pairs(builder_list) do
         if not header_2 then
-            table.insert(works.data, {
+            table.insert(data, {
                 {x="center", t="Builders' Requests"}
             })
             header_2 = true
 			no_request = false
         end
-        table.insert(works.data, {
+        table.insert(data, {
             {x="left" , t=string.format("%d/%s", builder.provided, builder.name), fg=builder.color},
             {x="right", t=builder.target                                        , fg=builder.color}
         })
     end
     if header_2 then
-        table.insert(works.data, {})
+        table.insert(data, {})
     end
 
     local header_3 = false
     for _, nonbuilder in pairs(nonbuilder_list) do
         if not header_3 then
-            table.insert(works.data, {
+            table.insert(data, {
                 {x="center", t="Nonbuilders' Requests"}
             })
             header_3 = true
@@ -140,17 +145,17 @@ function works.scan()
         if nonbuilder.name:match("^%d+") then
             text = string.format("%d/%s", nonbuilder.provided, nonbuilder.name)
         end
-        table.insert(works.data, {
+        table.insert(data, {
             {x="left" , t=text             , fg=nonbuilder.color},
             {x="right", t=nonbuilder.target, fg=nonbuilder.color}
         })
     end
     if header_3 then
-        table.insert(works.data, {})
+        table.insert(data, {})
     end
 
     if no_request then
-        table.insert(works.data, {x="center", t="No open requests", fg=colors.white, bg=colors.green})
+        table.insert(data, {x="center", t="No open requests", fg=colors.white, bg=colors.green})
 	end
 	
 	logging.log("Work requests", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")

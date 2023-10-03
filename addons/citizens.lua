@@ -3,9 +3,7 @@ local utils   = require("utils")
 
 local colony  = require("addons.colony")
 
-local citizens = {
-    data = {}
-}
+local citizens = {}
 
 local function sort_citizens(a, b)
     if a.age ~= b.age then
@@ -20,7 +18,12 @@ local function sort_citizens(a, b)
     return a.name < b.name
 end
 
-function citizens.scan()
+function citizens.scan(data, force)
+    local now = os.time()
+    if not force and (now < 5 or now > 19.5) then
+        return
+    end
+    
     logging.log("Citizens", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
     local general_list = {}
@@ -92,10 +95,10 @@ function citizens.scan()
 
 
     -- Time to save data!
-    citizens.data = {}
+    for k in pairs(data) do data[k] = nil end
 
     for _, citizen in pairs(general_list) do
-        table.insert(citizens.data, {
+        table.insert(data, {
             {x="left" , t=string.format("[%s%s] %s - %s ", citizen.gender, citizen.age == "child" and "C" or " ", citizen.job, citizen.name), fg=citizen.color}
         })
         local line = {}
@@ -104,11 +107,11 @@ function citizens.scan()
             table.insert(line, 1, {x="right", t=tag.name .. string.rep(" ", tag_space), fg=tag.color})
             tag_space = tag_space + #tag.name + 1
         end
-        if #line > 0 then table.insert(citizens.data, line) end
+        if #line > 0 then table.insert(data, line) end
     end
 
     if #general_list == 0 then
-        table.insert(citizens.data, {x="center", t="No citizens found", fg=colors.white, bg=colors.red})
+        table.insert(data, {x="center", t="No citizens found", fg=colors.white, bg=colors.red})
 	end
 
     logging.log("Citizens", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")

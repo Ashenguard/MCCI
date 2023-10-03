@@ -73,7 +73,7 @@ for i, monitor in ipairs(monitors.all) do
         local pw, ph = monitor.getSize()
         monitor.print(2, "center", tab_name(monitor.tab))
 
-        if monitor.data == nil then
+        if monitor.data == nil or next(monitor.data) == nil then
             monitor.print(4, "center", "No data found!", colors.white, colors.red)
             return
         end
@@ -96,12 +96,14 @@ for i, monitor in ipairs(monitors.all) do
     end
 
     function monitor.update()
-        local uw, _ = monitor.getSize()
+        local uw, uh = monitor.getSize()
 
-        monitor.row  = 1
         monitor.data = scanner.data[tabs_nick[monitor.tab]]
         monitor.prev = math.floor((uw - tabs_width - 6) / 2)
         monitor.next = monitor.prev + tabs_width + 3
+
+        monitor.row = math.min(monitor.row, #monitor.data - uh + 1)
+        monitor.row = math.max(1, monitor.row)
 
         monitor.print_data()
         if timer == nil then timer = require("timer") end
@@ -113,6 +115,11 @@ for i, monitor in ipairs(monitors.all) do
             if touched(x, monitor.prev, 3) then
                 monitor.tab = monitor.tab - 1
                 if monitor.tab < 1 then monitor.tab = #tabs end
+                monitor.update()
+                return true
+            end
+            if touched(x, monitor.prev + 3, tabs_width) then
+                scanner.scan(tabs_nick[monitor.tab], true)
                 monitor.update()
                 return true
             end

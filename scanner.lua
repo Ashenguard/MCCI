@@ -1,4 +1,4 @@
-local config = require("config")
+local config   = require("config")
 
 local works      = require("addons.works")
 local builds     = require("addons.builds")
@@ -7,32 +7,34 @@ local researches = require("addons.researches")
 local rs         = require("addons.rs")
 
 local scanner = {
-    data = {}
+    data = {
+        works = {},
+        builds = {},
+        researches = {},
+        citizens = {},
+        rs = {}
+    }
 }
 
-function scanner.run()
-    local TIMER = os.startTimer(0.5)
-    while true do
-        local _, t = os.pullEvent("timer")
-        if TIMER == t then
-            works.scan()
-            scanner.data.works = works.data
-
-            builds.scan()
-            scanner.data.builds = builds.data
-
-            researches.scan()
-            scanner.data.researches = researches.data
-
-            citizens.scan()
-            scanner.data.citizens = citizens.data
-
-            rs.scan()
-            scanner.data.rs = rs.data
-
-            TIMER = os.startTimer(config.internal)
-        end
+function scanner.scan(scan, force)
+    if scan == "work" or scan == "all" or scan == nil then
+        works.scan(scanner.data.works, force)
     end
+    if scan == "builds" or scan == "all" or scan == nil then
+        builds.scan(scanner.data.builds, force)
+    end
+    if scan == "researches" or scan == "all" or scan == nil then
+        researches.scan(scanner.data.researches, force)
+    end
+    if scan == "citizens" or scan == "all" or scan == nil then
+        citizens.scan(scanner.data.citizens, force)
+    end
+    if scan == "rs" or scan == "all" or scan == nil then
+        rs.scan(scanner.data.rs, force)
+    end
+    
+    local monitors = require("monitors")
+    monitors.update_all()
 end
 
 return scanner
