@@ -41,10 +41,12 @@ for i, monitor in ipairs(monitors.all) do
     monitor.prev = math.floor((w - tabs_width - 6) / 2)
     monitor.next = monitor.prev + tabs_width + 3
     monitor.data = {}
+    
+    monitor.actions = {}
 
     monitors.wrap[peripheral.getName(monitor)] = monitor
 
-    function monitor.print(row, pos, text, fg, bg, fill)
+    function monitor.print(row, pos, text, fg, bg, fill, action)
         if text == nil or pos == nil then
             return
         end
@@ -60,6 +62,15 @@ for i, monitor in ipairs(monitors.all) do
     
         if fg ~= nil then monitor.setTextColor(fg) end
         if bg ~= nil then monitor.setBackgroundColor(bg) end
+
+        if type(action) ~= "function" then
+            action = nil
+        end
+        
+        monitor.actions[row] = {}
+        for i = pos, math.min(pos + #text, pw) do
+            monitor.actions[row][i] = action
+        end
 
         monitor.setCursorPos(pos, row)
         monitor.write(text)
@@ -86,7 +97,7 @@ for i, monitor in ipairs(monitors.all) do
 
             if line ~= nil then
                 for _, state in ipairs(line) do
-                    monitor.print(ui + 3, state.x, state.t, state.fg, state.bg)
+                    monitor.print(ui + 3, state.x, state.t, state.fg, state.bg, false, state.a)
                 end
             end
         end
@@ -111,6 +122,7 @@ for i, monitor in ipairs(monitors.all) do
     end
 
     function monitor.call_touch(x, y)
+        -- Tabs change
         if y == 2 then
             if touched(x, monitor.prev, 3) then
                 monitor.tab = monitor.tab - 1
@@ -130,6 +142,8 @@ for i, monitor in ipairs(monitors.all) do
                 return true
             end
         end
+
+        -- Scrolling
         local tw, th = monitor.getSize()
         if y == 4 and touched(x, tw - 2, 3) then
             monitor.scroll(-1)
@@ -139,16 +153,28 @@ for i, monitor in ipairs(monitors.all) do
             monitor.scroll(1)
             return true
         end
+
+        local action_line = monitor.actions[y]
+        if action_line ~= nil then
+            local action = action_line[x]
+            if action ~= nil then
+                pcall(action, monitor)
+            end
+        end
     end
 
     function monitor.scroll(size)
         local _, sh = monitor.getSize()
+        local previous = monitor.row
+
         monitor.row = math.max(1, monitor.row + size)
         if #monitor.data - monitor.row < sh - 4 then
             monitor.row = #monitor.data - sh + 4
         end
 
-        monitor.print_data()
+        if previous ~= monitor.row then
+            monitor.print_data()
+        end
     end
 end
 
