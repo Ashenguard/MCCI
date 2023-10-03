@@ -83,6 +83,12 @@ function citizens.scan(data, force)
             table.insert(citizen.tags, tag)
         end
 
+        if citizen.state == "Sick" then
+            table.insert(citizen.tags, {name="[Sick]", color=colors.red})
+            ht = math.max(ht, 3)
+            citizen.state = nil   -- Just to avoid dup
+        end
+
         citizen.color = colors.lightBlue
         if ht == 1 then citizen.color = colors.yellow end
         if ht == 2 then citizen.color = colors.orange end
@@ -99,7 +105,8 @@ function citizens.scan(data, force)
 
     for _, citizen in pairs(general_list) do
         table.insert(data, {
-            {x="left" , t=string.format("[%s%s] %s - %s ", citizen.gender, citizen.age == "child" and "C" or " ", citizen.job, citizen.name), fg=citizen.color}
+            {x="left" , t=string.format("[%s%s] %s - %s ", citizen.gender, citizen.age == "child" and "C" or " ", citizen.job, citizen.name), fg=citizen.color},
+            {x="right", t=citizen.state, fg=colors.lightGray}
         })
         local line = {}
         local tag_space = 0
@@ -111,7 +118,7 @@ function citizens.scan(data, force)
     end
 
     if #general_list == 0 then
-        table.insert(data, {x="center", t="No citizens found", fg=colors.white, bg=colors.red})
+        table.insert(data, {{x="center", t="No citizens found", fg=colors.white, bg=colors.red}})
 	end
 
     logging.log("Citizens", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")

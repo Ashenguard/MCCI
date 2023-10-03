@@ -107,7 +107,7 @@ function rs.handle_request(request)
                 return "FAILED", provided, 0
             end
         else
-            logging.log("RS", "Request has been handled:", request.count, "x", item_name)
+            logging.log("RS", "Request has been handled:", provided, "x", item_name)
             return "DONE", provided, 0
         end
     else

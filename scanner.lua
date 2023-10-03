@@ -19,9 +19,9 @@ local scanner = {
 function scanner.scan(scan, force)
     local monitors = require("monitors")
 
-    if scan == "work" or scan == "all" or scan == nil then
+    if scan == "works" or scan == "all" or scan == nil then
         works.scan(scanner.data.works, force)
-        monitors.update_all("work")
+        monitors.update_all("works")
     end
     if scan == "builds" or scan == "all" or scan == nil then
         builds.scan(scanner.data.builds, force)

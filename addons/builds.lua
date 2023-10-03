@@ -178,7 +178,7 @@ function builds.scan(data, force)
     end
 	
 	if no_request then 
-        table.insert(data, {x="center", t="No buildings... How?", fg=colors.white, bg=colors.red})
+        table.insert(data, {{x="center", t="No buildings... How?", fg=colors.white, bg=colors.red}})
 	end
 
     logging.log("Builds", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")

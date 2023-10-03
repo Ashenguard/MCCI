@@ -155,7 +155,7 @@ function works.scan(data, force)
     end
 
     if no_request then
-        table.insert(data, {x="center", t="No open requests", fg=colors.white, bg=colors.green})
+        table.insert(data, {{x="center", t="No open requests", fg=colors.white, bg=colors.green}})
 	end
 	
 	logging.log("Work requests", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
