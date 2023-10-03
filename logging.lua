@@ -2,6 +2,20 @@ local logging = {}
 
 logging.filename = "logging.log"
 
+function logging.debug(message, ...)
+    for i, s in pairs(arg) do
+        if i ~= "n" then message = message .. " " .. s end
+    end
+
+    local file = fs.open(logging.filename, 'a')
+    file.writeLine(textutils.formatTime(os.time(), false) .. " - [DEBUG] " .. message)
+    file.close()
+
+    term.setTextColor(colors.lightGray)
+    print("[DEBUG] " .. message)
+    term.setTextColor(colors.white)
+end
+
 function logging.log(category, message, ...)
     for i, s in pairs(arg) do
         if i ~= "n" then message = message .. " " .. s end
