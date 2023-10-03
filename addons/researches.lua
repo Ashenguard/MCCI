@@ -12,7 +12,7 @@ function researches.scan(data, force)
     if not force and (now < 5 or now > 19.5) then
         return
     end
-    
+
 	logging.log("Researches", "Scan started at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
 
 	local not_started_list = {}
@@ -99,12 +99,10 @@ function researches.scan(data, force)
             {x="left" , t=string.format("[%s - %3.1fh] %s", research.category, research.time, research.name), fg=colors.lightBlue}
         })
 
-        if config.research.description then
-			for _, effect in pairs(research.researchEffects) do
-                table.insert(data, {
-                    {x="left" , t="  - " .. effect, fg=colors.lightGray}
-                })
-			end
+		for _, effect in pairs(research.researchEffects) do
+            table.insert(data, {
+                {x="left" , t="  - " .. effect, fg=colors.lightGray}
+            })
 		end
     end
     if header_2 then
@@ -131,20 +129,18 @@ function researches.scan(data, force)
             })
         end
 
-        if config.research.description then
-			for _, effect in pairs(research.researchEffects) do
-                table.insert(data, {
-                    {x="left" , t="  - " .. effect, fg=colors.pink}
-                })
-			end
-		end
+        for _, effect in pairs(research.researchEffects) do
+            table.insert(data, {
+                {x="left" , t="  - " .. effect, fg=colors.pink}
+            })
+        end
     end
     if header_3 then
         table.insert(data, {})
     end
 	
 	if no_request then
-        table.insert(data, {x="center", t="No open requests", fg=colors.white, bg=colors.green})
+        table.insert(data, {x="center", t="No researches found", fg=colors.white, bg=colors.green})
 	end
 	
 	logging.log("Researches", "Scan completed at", textutils.formatTime(os.time(), false) .. " (" .. os.time() ..").")
