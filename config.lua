@@ -9,7 +9,7 @@ local config = {}
 --    Note: AE is not implemented yet so...
 config.storage_mod = "RS"
 -- Storage container connected to warehouse or entangled block location
-config.export_to = "entangled:tile_1"
+config.export_to = "entangled:tile_2"
 -- Time between checks in seconds
 config.internal = 30
 

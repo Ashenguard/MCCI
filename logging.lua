@@ -23,7 +23,9 @@ function logging.warn(category, message, ...)
     file.writeLine(textutils.formatTime(os.time(), false) .. " - [" .. category .. "] WARN - " .. message)
     file.close()
 
+    term.setTextColor(colors.red)
     print("[" .. category .. "] WARN - " .. message)
+    term.setTextColor(colors.white)
 end
 
 function logging.error(category, message, ...)

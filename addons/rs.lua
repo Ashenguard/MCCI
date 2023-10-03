@@ -88,10 +88,14 @@ function rs.handle_request(request)
         
         -- NBTs might fail...
         if request.items[1].nbt == nil or next(request.items[1].nbt) == nil then
-            local stored = bridge.getItem({name=item_name}).amount
-            provided = math.min(stored, request.count)
-            if provided > 0 then
-                bridge.exportItemToPeripheral({name=item_name, count=provided}, config.export_to)
+            local stored = math.min(bridge.getItem({name=item_name}).amount, request.count)
+            if stored > 0 then
+                local export = bridge.exportItemToPeripheral({name=item_name, count=stored}, config.export_to)
+                if type(export) == "number" then
+                    provided = export
+                else
+                    logging.warn("RS", "Unable to export items due", export)
+                end
             end
         end
         
@@ -107,6 +111,7 @@ function rs.handle_request(request)
                 return "FAILED", provided, 0
             end
         else
+            logging.log("RS", "Request has been handled:", request.count, "x", item_name)
             return "DONE", provided, 0
         end
     else
