@@ -85,6 +85,24 @@ function researches.scan(data, force)
         table.insert(data, {})
     end
 
+    local shown = {line = 0, value = {}, list = {}}
+    local function hide_info(monitor)
+        if shown.line == 0 then
+            return
+        end
+
+        logging.debug(shown.line)
+
+        data[shown.line] = shown.value
+        table.sort(shown.list, function (a, b) return a > b end)
+        for _, l in ipairs(shown.list) do
+            logging.debug(l, textutils.serialise(data[l]))
+            table.remove(data, l)
+        end
+
+        shown = {line = 0, value = {}, list = {}}
+    end
+
     local header_2 = false
     for _, research in pairs(not_started_list) do
         if not header_2 then
@@ -94,9 +112,29 @@ function researches.scan(data, force)
             header_2 = true
 			no_request = false
         end
+        
+        local cost_line = #data + 2
+        local function show_info(monitor)
+            hide_info()
+
+            shown.line = cost_line - 1
+            shown.value = data[shown.line]
+
+            data[cost_line - 1] = {
+                {x="left" , t=string.format("    [%s - %3.1fh] %s", research.category, research.time, research.name), fg=colors.lightBlue},
+                {x="left" , t="[-]", fg=colors.red, a=hide_info}
+            }
+            for i, item in pairs(research.cost) do
+                table.insert(shown.list, cost_line + i - 1)
+                table.insert(data, cost_line, {
+                    {x="left" , t="  - " .. item.count .. "x " .. item.displayName:sub(2, -2), fg=colors.lightGray}
+                })
+            end
+        end
 
         table.insert(data, {
-            {x="left" , t=string.format("[%s - %3.1fh] %s", research.category, research.time, research.name), fg=colors.lightBlue}
+            {x="left" , t=string.format("    [%s - %3.1fh] %s", research.category, research.time, research.name), fg=colors.lightBlue},
+            {x="left" , t="[+]", fg=colors.green, a=show_info}
         })
 
 		for _, effect in pairs(research.researchEffects) do

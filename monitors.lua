@@ -158,7 +158,12 @@ for i, monitor in ipairs(monitors.all) do
         if action_line ~= nil then
             local action = action_line[x]
             if action ~= nil then
-                pcall(action, monitor)
+                local v, e = pcall(action, monitor)
+                if v then
+                    monitor.update()
+                else
+                    logging.warn("Touch", e)
+                end
             end
         end
     end
