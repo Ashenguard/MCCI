@@ -91,12 +91,9 @@ function researches.scan(data, force)
             return
         end
 
-        logging.debug(shown.line)
-
         data[shown.line] = shown.value
         table.sort(shown.list, function (a, b) return a > b end)
         for _, l in ipairs(shown.list) do
-            logging.debug(l, textutils.serialise(data[l]))
             table.remove(data, l)
         end
 
