@@ -54,6 +54,11 @@ function citizens.scan(data, force)
                 table.insert(citizen.tags, tag)
             end
         end
+
+        if citizen.job == "Unemployed" then
+            table.insert(citizen.tags, {name="[Unemployed]", color=colors.yellow})
+            ht = 1
+        end
         
         if citizen.health < 0.75 * citizen.maxHealth then
             local tag = {name="[Harmed]", color=colors.yellow}

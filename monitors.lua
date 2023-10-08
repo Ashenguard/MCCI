@@ -113,8 +113,12 @@ for i, monitor in ipairs(monitors.all) do
         monitor.prev = math.floor((uw - tabs_width - 6) / 2)
         monitor.next = monitor.prev + tabs_width + 3
 
-        monitor.row = math.min(monitor.row, #monitor.data - uh + 1)
-        monitor.row = math.max(1, monitor.row)
+        if monitor.data == nil then
+            monitor.row = 1
+        else
+            monitor.row = math.min(monitor.row, #monitor.data - uh + 1)
+            monitor.row = math.max(1, monitor.row)
+        end
 
         monitor.print_data()
         if timer == nil then timer = require("timer") end
@@ -130,14 +134,14 @@ for i, monitor in ipairs(monitors.all) do
                 monitor.update()
                 return true
             end
-            if touched(x, monitor.prev + 3, tabs_width) then
-                scanner.scan(tabs_nick[monitor.tab], true)
-                monitor.update()
-                return true
-            end
             if touched(x, monitor.next, 3) then
                 monitor.tab = monitor.tab + 1
                 if monitor.tab > #tabs then monitor.tab = 1 end
+                monitor.update()
+                return true
+            end
+            if touched(x, monitor.prev + 3, tabs_width) then
+                scanner.scan(tabs_nick[monitor.tab], true)
                 monitor.update()
                 return true
             end
