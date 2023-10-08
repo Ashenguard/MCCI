@@ -1,10 +1,10 @@
-local config   = require("config")
-
-local works      = require("addons.works")
-local builds     = require("addons.builds")
-local citizens   = require("addons.citizens")
-local researches = require("addons.researches")
-local rs         = require("addons.rs")
+local scanners = {
+    works      = require("addons.works"),
+    builds     = require("addons.builds"),
+    citizens   = require("addons.citizens"),
+    researches = require("addons.researches"),
+    rs         = require("addons.rs"),
+}
 
 local scanner = {
     data = {
@@ -12,33 +12,38 @@ local scanner = {
         builds = {},
         researches = {},
         citizens = {},
-        rs = {}
+        rs = {},
+        settings = {}
     }
 }
+
+local scans = {{"works", true}, {"builds", false}, {"researches", false}, {"citizens", false}, {"rs", false}}
+local function sub_scan(monitors, scan, force)
+    scanners[scan].scan(scanner.data[scan], force)
+    monitors.update_all(scan)
+end
+
 
 function scanner.scan(scan, force)
     local monitors = require("monitors")
 
-    if scan == "works" or scan == "all" or scan == nil then
-        works.scan(scanner.data.works, force)
-        monitors.update_all("works")
+    if scan ~= nil and scan ~= "all" then
+        sub_scan(monitors, scan, force)
+        return
     end
-    if scan == "builds" or scan == "all" or scan == nil then
-        builds.scan(scanner.data.builds, force)
-        monitors.update_all("builds")
+
+    local list = {}
+    for _, s in ipairs(scans) do
+        local mons = monitors.find(s[1])
+        if #mons > 0 or s[2] or force then
+            local function temp()
+                sub_scan(monitors, s[1], force)
+            end
+            table.insert(list, temp)
+        end
     end
-    if scan == "researches" or scan == "all" or scan == nil then
-        researches.scan(scanner.data.researches, force)
-        monitors.update_all("researches")
-    end
-    if scan == "citizens" or scan == "all" or scan == nil then
-        citizens.scan(scanner.data.citizens, force)
-        monitors.update_all("citizens")
-    end
-    if scan == "rs" or scan == "all" or scan == nil then
-        rs.scan(scanner.data.rs, force)
-        monitors.update_all("rs")
-    end
+
+    parallel.waitForAll(unpack(list))
 end
 
 return scanner

@@ -203,6 +203,17 @@ function monitors.update_all(tab)
     end
 end
 
+function monitors.find(tab)
+    local list = {}
+    for _, monitor in pairs(monitors.all) do
+        if tabs_nick[monitor.tab] == tab then
+            table.insert(list, monitor)
+        end
+    end
+
+    return list
+end
+
 function monitors.run()
     while true do
         local _, m, x, y = os.pullEvent("monitor_touch")
