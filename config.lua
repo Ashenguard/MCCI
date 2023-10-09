@@ -1,7 +1,9 @@
 local config = {}
 
+local path = fs.combine(shell.getRunningProgram(),"/config.ini")
+
 do
-    for line in io.lines("config.ini") do
+    for line in io.lines(path) do
         if line:match("(.+)%s+=%s+(.+)") then
             local key, value = line:match("(.+)%s+=%s+(.+)")
             if value:match("^%d+$") then
@@ -16,7 +18,7 @@ end
 
 function config.save()
     local lines = {}
-    for line in io.lines("config.ini") do
+    for line in io.lines(path) do
         if line:match("^(.+)%s+=%s+(.+)$") then
             local key, _ = line:match("^(.+)%s+=%s+(.+)$")
             if config[key] ~= nil then
@@ -26,7 +28,7 @@ function config.save()
         lines:insert(line)
     end
     
-    local file = fs.open("config.ini", "w")
+    local file = fs.open(path, "w")
     for _, line in ipairs(lines) do
         file.writeLine(line)
     end
