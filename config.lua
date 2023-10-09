@@ -1,7 +1,6 @@
 local config = {}
 
-local path = fs.combine(shell.getRunningProgram(),"/config.ini")
-
+local path = fs.combine(shell.getRunningProgram():gsub("(.*)startup%.lua$", ""), "config.ini")
 do
     for line in io.lines(path) do
         if line:match("(.+)%s+=%s+(.+)") then
