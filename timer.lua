@@ -1,6 +1,7 @@
 local config   = require("config")
 local monitors = require("monitors")
 local scanner  = require("scanner")
+local logging  = require("logging")
 
 local timer = {}
 
@@ -21,12 +22,20 @@ local scanning, force
 
 local function countdown()
     monitors.update_all()
+    local last_alarm = nil
     local TIMER = os.startTimer(1)
     while true do
         local _, t = os.pullEvent("timer")
         if TIMER == t then
             TIMER = os.startTimer(1)
             local now = os.time()
+
+            if math.floor(now) % 6 == 0 and last_alarm ~= "alarm_" .. math.floor(now / 6) then
+                last_alarm = "alarm_" .. math.floor(now / 6)
+                timer.alarm = last_alarm
+            end
+
+
             if now >= 4 and now < 6 then
                 timer.data.cycle = "Sunrise"
                 timer.data.time_color = colors.orange
@@ -76,11 +85,31 @@ local function scan()
     end
 end
 
+local function alarm()
+    local speaker = peripheral.find("speaker")
+    if not speaker then
+        logging.warn("Setup", "Please add a speaker to the setup to activate alarms!")
+        return
+    end
+
+    while true do
+        if timer.alarm ~= nil and timer.alarm:match("^alarm_%d+$") then
+            local count = tonumber(timer.alarm:sub(7))
+            timer.alarm = nil
+            for i = 0, count do
+                speaker.playSound("minecraft:block.bell.use", 10)
+                sleep(1.5)
+            end
+        end
+        sleep(0.5)
+    end
+end
+
 function timer.run()
     scanning = true
     force = true
     
-    parallel.waitForAll(countdown, scan)
+    parallel.waitForAll(countdown, scan, alarm)
 end
 
 return timer
