@@ -89,7 +89,7 @@ for i, monitor in ipairs(monitors.all) do
             return
         end
 
-        for ui = 1, h - 3 do
+        for ui = 1, ph - 3 do
             local line = monitor.data[ui + monitor.row - 1]
             
             monitor.setCursorPos(1, ui + 3)
@@ -102,8 +102,8 @@ for i, monitor in ipairs(monitors.all) do
             end
         end
 
-        if monitor.row > 1 then monitor.print(4, pw - 2, "^", nil, nil, true) end
-        if #monitor.data > ph - 3 then monitor.print(ph, pw - 2, "v", nil, nil, true) end
+        if monitor.row > 1 then monitor.print(4, pw - 2, "\24", nil, nil, true) end
+        if #monitor.data > ph - 3 then monitor.print(ph, pw - 2, "\25", nil, nil, true) end
     end
 
     function monitor.update()
