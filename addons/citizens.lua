@@ -55,7 +55,7 @@ function citizens.scan(data, force)
             end
         end
 
-        if citizen.job == "Unemployed" then
+        if citizen.job == "Unemployed" and citizen.age ~= "child" then
             table.insert(citizen.tags, {name="[Unemployed]", color=colors.yellow})
             ht = 1
         end
