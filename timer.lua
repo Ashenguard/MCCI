@@ -30,7 +30,7 @@ local function countdown()
             TIMER = os.startTimer(1)
             local now = os.time()
 
-            if math.floor(now) % 6 == 0 and last_alarm ~= "alarm_" .. math.floor(now / 6) then
+            if config.daytime_alarm and math.floor(now) % 6 == 0 and last_alarm ~= "alarm_" .. math.floor(now / 6) then
                 last_alarm = "alarm_" .. math.floor(now / 6)
                 timer.alarm = last_alarm
             end

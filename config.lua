@@ -7,6 +7,10 @@ do
             local key, value = line:match("(.+)%s+=%s+(.+)")
             if value:match("^%d+$") then
                 value = tonumber(value)
+            elseif value:match("^true$") then
+                value = true
+            elseif value:match("^false$") then
+                value = false
             end
 
             config[key] = value
