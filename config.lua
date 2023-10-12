@@ -28,7 +28,7 @@ function config.save()
                 line = key .. " = " .. tostring(config[key])
             end
         end
-        lines:insert(line)
+        table.insert(lines, line)
     end
     
     local file = fs.open(path, "w")
