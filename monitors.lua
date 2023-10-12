@@ -1,5 +1,6 @@
 local logging = require("logging")
 local scanner = require("scanner")
+local utils   = require("utils")
 local timer   = nil                 -- Avoiding require loop by initializing it in runtime
 
 local monitors = {}
@@ -234,13 +235,13 @@ end
 local path = fs.combine(shell.getRunningProgram():gsub("startup%.lua$", ""), "monitors.save")
 function monitors.save()
     local file = fs.open(path, "w")
-    for monitor in monitors.all do
+    for _, monitor in ipairs(monitors.all) do
         file.writeLine(peripheral.getName(monitor) .. " = " .. tostring(monitor.tab))
     end
     file.close()
 end
 
-do
+if utils.file_exists(path) then
     local map = {}
     for line in io.lines(path) do
         if line:match("(.+)%s+=%s+(.+)") then
@@ -250,12 +251,14 @@ do
             end
         end
     end
-    for monitor in monitors.all do
+    for _, monitor in ipairs(monitors.all) do
         local tab = map[peripheral.getName(monitor)]
         if tab ~= nil then
             monitor.tab = tab
         end
     end
 end
+
+monitors.save()
 
 return monitors

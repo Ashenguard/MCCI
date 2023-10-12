@@ -1,5 +1,10 @@
-local logging = require "logging"
 local utils = {}
+
+function utils.file_exists(name)
+	local f = io.open(name, "r")
+	return f ~= nil and io.close(f)
+ end
+ 
 
 function utils.distance(pos1, pos2)
 	local x = pos1.x - pos2.x
