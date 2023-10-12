@@ -67,9 +67,11 @@ for i, monitor in ipairs(monitors.all) do
             action = nil
         end
         
-        monitor.actions[row] = {}
-        for i = pos, math.min(pos + #text, pw) do
-            monitor.actions[row][i] = action
+        if monitor.actions[row] == nil then
+            monitor.actions[row] = {}
+        end
+        for x = pos, math.min(pos + #text, pw) do
+            monitor.actions[row][x] = action
         end
 
         monitor.setCursorPos(pos, row)
@@ -80,6 +82,7 @@ for i, monitor in ipairs(monitors.all) do
 
     function monitor.print_data()
         monitor.clear()
+        monitor.actions = {}
     
         local pw, ph = monitor.getSize()
         monitor.print(2, "center", tab_name(monitor.tab))
@@ -94,6 +97,7 @@ for i, monitor in ipairs(monitors.all) do
             
             monitor.setCursorPos(1, ui + 3)
             monitor.clearLine()
+            monitor.actions[ui + 3] = {}
 
             if line ~= nil then
                 for _, state in ipairs(line) do
