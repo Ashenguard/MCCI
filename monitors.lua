@@ -136,12 +136,14 @@ for i, monitor in ipairs(monitors.all) do
                 monitor.tab = monitor.tab - 1
                 if monitor.tab < 1 then monitor.tab = #tabs end
                 monitor.update()
+                monitors.save()
                 return true
             end
             if touched(x, monitor.next, 3) then
                 monitor.tab = monitor.tab + 1
                 if monitor.tab > #tabs then monitor.tab = 1 end
                 monitor.update()
+                monitors.save()
                 return true
             end
             if touched(x, monitor.prev + 3, tabs_width) then
@@ -225,6 +227,33 @@ function monitors.run()
 
         if monitor then
             monitor.call_touch(x, y)
+        end
+    end
+end
+
+local path = fs.combine(shell.getRunningProgram():gsub("startup%.lua$", ""), "monitors.save")
+function monitors.save()
+    local file = fs.open(path, "w")
+    for monitor in monitors.all do
+        file.writeLine(peripheral.getName(monitor) .. " = " .. tostring(monitor.tab))
+    end
+    file.close()
+end
+
+do
+    local map = {}
+    for line in io.lines(path) do
+        if line:match("(.+)%s+=%s+(.+)") then
+            local key, value = line:match("(.+)%s+=%s+(.+)")
+            if value:match("^%d+$") then
+                map[key] = tonumber(value)
+            end
+        end
+    end
+    for monitor in monitors.all do
+        local tab = map[peripheral.getName(monitor)]
+        if tab ~= nil then
+            monitor.tab = tab
         end
     end
 end
